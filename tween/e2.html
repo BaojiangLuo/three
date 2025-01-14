@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tween</title>
+    <script src="./tween.umd.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 50px 0;
+        }
+
+        .box {
+            width: 150px;
+            height: 150px;
+        }
+
+        .b1 {
+            background: lightcoral;
+        }
+
+        .b2 {
+            margin-top: 50px;
+            background: lightgreen;
+            float: right;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="b1" class="box b1"></div>
+    <div id="b2" class="box b2"></div>
+    <script>
+        const b1 = document.getElementById('b1')
+        const b2 = document.getElementById('b2')
+        const width = window.innerWidth - 150
+        var poxition = { x1: 0 }
+        var rotation = { theta: 0 }
+        var groupA = new TWEEN.Group()
+        var groupB = new TWEEN.Group()
+        var tween1 = new TWEEN.Tween(poxition, groupA)
+        tween1.to({ x1: width }, 1500)
+            .repeat(Infinity)
+            .onUpdate(animationBox)
+            .yoyo(true)
+            .easing(TWEEN.Easing.Bounce.In)
+            .start()
+        
+        var tween2 = new TWEEN.Tween(rotation, groupB)
+            .to({ theta: 360 }, 2000)
+            .repeat(Infinity)
+            .onUpdate(animationBox)
+            .start()
+
+        function animation (time) {
+            requestAnimationFrame(animation)
+            groupA.update()
+            groupB.update()
+        }
+        function animationBox() {
+            b1.style.transform = `translate(${poxition.x1}px) rotate(${rotation.theta}deg)`
+            b2.style.transform = `translate(${-poxition.x1}px) rotate(${-rotation.theta}deg)`
+        }
+        animation()
+    </script>
+</body>
+
+</html>

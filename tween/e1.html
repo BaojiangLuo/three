@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tween</title>
+    <script src="./tween.umd.js"></script>
+</head>
+<body>
+    <script>
+        var position = { x: 200 }
+        TWEEN.removeAll()
+        var tween = new TWEEN.Tween(position)
+        tween.to({x: 400}, 1000)
+            .onUpdate(function (obj) {
+                console.log(obj.x)
+                // document.write(obj.x)
+            })
+            .start(3000)
+            
+        function animation () {
+            requestAnimationFrame(animation)
+            tween.update()
+        }
+        animation()
+    </script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tween</title>
+    <script src="./tween.umd.js"></script>
+</head>
+<body>
+    <button id="btn">点击</button>
+
+    <script>
+        // var position = { x: 200 }
+        var position = [0, 100, 200]
+        TWEEN.removeAll()
+		let i = 0
+        var tween = new TWEEN.Tween(position)
+		let obj = {0: 100, 1: 200, 2: 300}
+        tween.to(obj, 3000)
+            .onUpdate(function (obj) {
+                console.log(obj[0], obj[1], obj[2])
+                // document.write(obj.x)
+            })
+            .start()
+            .onComplete(function () {
+                console.log(position)
+            })
+        let btn = document.getElementById("btn")
+        let c = '+5'
+        let diff = 1
+        btn.addEventListener('click', function () {
+            tween = new TWEEN.Tween(position)
+            .to({0: c, 1: c, 2: c})
+            .onUpdate(function (obj) {
+                console.log(obj[0], obj[1], obj[2])
+            })
+            .start()
+            .onComplete(function () {
+                console.log(position)
+                diff++
+                c = `+${diff * 5}`
+                console.log(c)
+            })
+        })
+        function animation () {
+            requestAnimationFrame(animation)
+            tween.update()
+        }
+        animation()
+    </script>
+</body>
+</html>

@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>星语祝福</title>
+    <meta
+			name="viewport"
+			content="width=device-width,initial-scale=1.0"
+		/>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        /* height: 100%; */
+        width: 100vw + 20px;
+        height: 100vh;
+        background-color: #000000;
+      }
+
+      #c {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+    </style>
+    <link rel="stylesheet" href="./css/index.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "./jsm/three.module.js"
+        }
+      }
+    </script>
+    <style>
+        body {
+            overflow: hidden;
+        }
+        .ope-wrapper{
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80vw;
+            max-width: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #c {
+          transition: opacity .2s;
+        }
+        .btn{
+            width: 100%;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            padding: 15px 20px;
+            cursor: pointer;
+            background-image: linear-gradient(219deg, #13b0c2 0%, #1153a6 100%);
+            opacity: .85;
+            /* transition: opacity .2s; */
+        }
+        .mode0 {
+          background-image: linear-gradient(219deg, #13b0c2 0%, #1153a6 100%);
+        }
+        .mode1 {
+          background-image: linear-gradient(219deg, rgb(243, 193, 255) 0%, #aa80ff 100%);
+        }
+        .mode2 {
+          background-image: linear-gradient(219deg, #ffdcea 0%, #ff80b3 100%);
+        }
+        .btn:hover{
+            opacity: .95;
+        }
+        .hide {
+          pointer-events: none;
+          opacity: 0 !important;
+        }
+        .hideafter {
+          pointer-events: none;
+          animation: hideAndShow .5s linear forwards;
+        }
+        @keyframes hideAndShow {
+          0% {
+            opacity: 1;
+          }
+          20% {
+            opacity: 0;
+          }
+          50% {
+            opacity: .5;
+          }
+          100% {
+            opacity: 1;
+          }
+        }
+    </style>
+  </head>
+
+  <body>
+    <canvas id="c"></canvas>
+    <div class="ope-wrapper">
+        <div class="btn hide mode0" id="more_plusure">
+            更多惊喜
+        </div>
+    </div>
+    <div id="loading">
+      <p class="loading-text">loading . . .</p>
+      <div class="progress">
+        <div class="progressbar"></div>
+      </div>
+    </div>
+    <script type="module">
+      import * as THREE from "three";
+      import { OrbitControls } from "./jsm/controls/OrbitControls.js";
+      import { GLTFLoader } from "./jsm/loaders/GLTFLoader.js";
+      import { RGBELoader } from "./jsm/loaders/RGBELoader.js";
+      import { EffectComposer } from "./jsm/postprocessing/EffectComposer.js";
+      import { RenderPass } from "./jsm/postprocessing/RenderPass.js";
+      import { ShaderPass } from "./jsm/postprocessing/ShaderPass.js";
+      import { FontLoader } from "./jsm/loaders/FontLoader.js";
+      import { TextGeometry } from "./jsm/geometries/TextGeometry.js";
+      import { GUI } from "./jsm/libs/lil-gui.module.min.js";
+      import { UnrealBloomPass } from "./jsm/postprocessing/UnrealBloomPass.js";
+      import { AdaptiveToneMappingPass } from "./jsm/postprocessing/AdaptiveToneMappingPass.js";
+      import TWEEN from "./tween/tween.esm.js";
+      let canvas,
+        camera,
+        renderer,
+        light,
+        scene,
+        control,
+        animationMixer,
+        peopleMtl,
+        finalComposer,
+        renderPass,
+        adaptToneMappingPass,
+        mesh,
+        fontLoader,
+        gltfLoader,
+        starCount,
+        pointMesh,
+        textMtl,
+        unrealBloomPass;
+      // const gui = new GUI();
+      let curMode = 0
+      const modes = [
+        { 
+          textColor: '#0059b3',
+          pointColors: ["#0099ff", "#003d99", "#80ccff", "#ffffff"],
+          textMesh: null,
+          text: '姓罗的，生日快乐',
+        },
+        { 
+          textColor: '#aa80ff',
+          pointColors: ['#aa80ff', '#bb99ff', '#f5ccff', '#ffffff'],
+          textMesh: null,
+          text: '祝你美如紫霞'
+        },
+        {
+          textColor: '#ff80b3',
+          pointColors: ['#ff80b3', '#ffe5ff', '#0099ff', '#ffffff'],
+          textMesh: null,
+          text: '愿你幸福常乐，生活缤纷'
+        }
+      ]
+      const params = {
+        // x1: 10,
+        // y1: -60,
+        // z1: 10,
+        x1: -35,
+        y1: -23,
+        z1: -67,
+        x2: -70,
+        y2: 70,
+        z2: -180,
+        middleGrey: 5.796,
+        maxLuminance: 130.954,
+        exposure: 1.19,
+        bloomThreshold: 0.134,
+        // bloomStrength: 1.84,
+        bloomStrength: 1.5,
+        bloomRadius: 1,
+        scene: "Scene with Glow",
+        avgLuminance: 0.7,
+        adaptionRate: 2.0,
+      };
+      const clock = new THREE.Clock();
+      let utime = 0;
+
+      function coreFun() {
+        const loadManager = initLoadManager();
+        // scene.add(new THREE.AxesHelper(500));
+
+        gltfLoader = new GLTFLoader(loadManager);
+        fontLoader = new FontLoader(loadManager);
+        initFont();
+        // initPoint(1)
+        // initPoint(2)
+        controlAnimation(true);
+        loadGltfToPoints()
+        createAfterImage();
+        addClickEvent()
+      }
+      function addClickEvent () {
+        let btnDom = document.getElementById('more_plusure')
+        btnDom.addEventListener('click', function () {
+          let modeLen = modes.length
+          curMode++
+          curMode = curMode % modeLen
+          turnColor(curMode)
+        })
+      }
+      function showBtn () {
+        let btnDom = document.getElementById('more_plusure')
+        for (let index = 0; index < modes.length; index++) {
+          btnDom.classList.remove(`mode${index}`)
+        }
+        btnDom.classList.add(`mode${curMode}`)
+        setTimeout(() => {
+          btnDom.classList.remove('hide')
+        }, 800);
+      }
+      function loadGltfToPoints () {
+        gltfLoader.load("./models/gltf/universe/scene.gltf", function (gltf) {
+          const root = gltf.scene;
+
+          // start
+          const geometry = gltf.scene.children[0].geometry; // 获取几何体
+          const positionArrBufferAttribute =
+            root.children[0].children[0].children[0].geometry.attributes
+              .position;
+          starCount = positionArrBufferAttribute.count;
+          let geometrySphere = new THREE.SphereBufferGeometry(0.1, 24, 24);
+          const mtl = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            // transparent: true,
+            // blending: THREE.AdditiveBlending
+          });
+          pointMesh = new THREE.InstancedMesh(geometrySphere, mtl, starCount);
+          let matrix = new THREE.Matrix4();
+          let index = 0;
+          let colorArr = modes[0].pointColors
+
+          for (let i = 0; i < starCount; i++) {
+            // if (i % 10!==0) continue
+            let indexT = i * 3;
+            let [x, y, z] = positionArrBufferAttribute.array.slice(
+              indexT,
+              indexT + 3
+            );
+            // let [cx,cy,cz] = colorArrBufferAttribute.array.slice(indexT, indexT + 3)
+            matrix.setPosition(x, y, z);
+            pointMesh.setMatrixAt(index, matrix);
+            let colorIndex = i % 8 > 3 ? 0 : i % 8;
+            pointMesh.setColorAt(index, new THREE.Color(colorArr[colorIndex]));
+            // mesh.setColorAt(index, new THREE.Color(1,1,1))
+            index++;
+          }
+          pointMesh.rotateX(Math.PI * 0.5);
+          pointMesh.position.x = -110;
+          pointMesh.position.y = 115;
+          pointMesh.position.z = -110;
+          // mesh.frustumCulled = true
+          scene.add(pointMesh);
+          // end
+          // console.log(root);
+          geometrySphere.dispose();
+          mtl.dispose();
+          // possGui()
+        });
+        
+      }
+      function turnColor () {
+        let btnDom = document.getElementById('more_plusure')
+        let canvasDom = document.getElementById('c')
+        btnDom.classList.add('hide')
+        canvasDom.classList.add('hide')
+        setTimeout(() => {
+          initStartControl()
+          controlAnimation()
+          let index = 0;
+          // let colorArr = ['#0000ff', '#0000ff', '#0000ff', '#0000ff']//粉色
+          let colorArr = modes[curMode].pointColors
+          for (let i = 0; i < starCount; i++) {
+            // if (i % 10!==0) continue
+            let indexT = i * 3;
+            // pointMesh.setMatrixAt(index, matrix);
+            let colorIndex = i % 8 > 3 ? 0 : i & 8;
+            // console.log('colorIndex', colorIndex)
+            pointMesh.setColorAt(index, new THREE.Color(colorArr[colorIndex]));
+            // mesh.setColorAt(index, new THREE.Color(1,1,1))
+            index++;
+          }
+
+          for (let index = 0; index < modes.length; index++) {
+            const layer = index;
+            camera.layers.disable(layer+1);
+          }
+          camera.layers.enable(curMode + 1)
+
+          textMtl.color.set(modes[curMode].textColor)
+          pointMesh.instanceColor.needsUpdate = true
+          setTimeout(() => {
+            canvasDom.classList.remove('hide')
+          }, 400)
+        }, 100)
+        // render()
+      }
+      // 相机动画
+      function controlAnimation(isFirst = false) {
+        TWEEN.removeAll()
+        control.autoRotate = false;
+        let durationTime = isFirst ? 15000 : 4000
+        new TWEEN.Tween(camera.position)
+          .to(
+            {
+              x: params.x2,
+              y: params.y2,
+              z: params.z2,
+            },
+            durationTime
+          )
+          .easing(TWEEN.Easing.Quartic.In)
+          .onComplete(function () {
+            setTimeout(() => {
+              control.target.set(0, 0, 0);
+              control.autoRotateSpeed = 0.4;
+              control.autoRotate = true;
+            })
+            showBtn()
+          })
+          .delay(100)
+          .start();
+      }
+      // 辅助位移点
+      function initPoint(n) {
+        let sphereGeo = new THREE.SphereBufferGeometry(4, 32, 16);
+        const mtl = new THREE.MeshBasicMaterial({
+          color: 0xff0000,
+          // transparent: true,
+          // blending: THREE.AdditiveBlending
+        });
+        let mesh = new THREE.Mesh(sphereGeo, mtl);
+        let keys = [`x${n}`, `y${n}`, `z${n}`];
+        mesh.position.set(params[keys[0]], params[keys[1]], params[keys[2]]);
+        mesh.layers.set( 10 );
+        scene.add(mesh);
+        const folder = gui.addFolder(`Pos${n}`);
+        folder.add(params, `x${n}`, -200, 200).onChange(function (value) {
+          mesh.position.x = value;
+          render();
+        });
+        folder.add(params, `y${n}`, -200, 200).onChange(function (value) {
+          mesh.position.y = value;
+          render();
+        });
+        folder.add(params, `z${n}`, -200, 200).onChange(function (value) {
+          mesh.position.z = value;
+          render();
+        });
+      }
+      function possGui(mesh) {
+        // gui
+        //   .add(params, "scene", ["Scene with Glow", "Glow only", "Scene only"])
+        //   .onChange(function (value) {
+        //     switch (value) {
+        //       case "Scene with Glow":
+        //         bloomComposer.renderToScreen = false;
+        //         break;
+        //       case "Glow only":
+        //         bloomComposer.renderToScreen = true;
+        //         break;
+        //       case "Scene only":
+        //         // nothing to do
+        //         break;
+        //     }
+
+        //     render();
+        //   });
+        
+        const folder = gui.addFolder("Bloom Parameters");
+        folder.add(params, "middleGrey", 0, 12).onChange(function (value) {
+          adaptToneMappingPass.setMaxLuminance(params.maxLuminance);
+          adaptToneMappingPass.setMiddleGrey(params.middleGrey);
+          render();
+        });
+        folder.add(params, "maxLuminance", 1, 190).onChange(function (value) {
+          adaptToneMappingPass.setMaxLuminance(params.maxLuminance);
+          adaptToneMappingPass.setMiddleGrey(params.middleGrey);
+          render();
+        });
+        folder.add(params, "exposure", 0.1, 2).onChange(function (value) {
+          renderer.toneMappingExposure = Math.pow(value, 4.0);
+          render();
+        });
+
+        folder
+          .add(params, "bloomThreshold", 0.0, 1.0)
+          .onChange(function (value) {
+            unrealBloomPass.threshold = Number(value);
+            render();
+          });
+
+        folder
+          .add(params, "bloomStrength", 0.0, 10.0)
+          .onChange(function (value) {
+            unrealBloomPass.strength = Number(value);
+            render();
+          });
+
+        folder
+          .add(params, "bloomRadius", 0.0, 1.0)
+          .step(0.01)
+          .onChange(function (value) {
+            unrealBloomPass.radius = Number(value);
+            render();
+          });
+      }
+      function initFont() {
+        // const fontLoader = new FontLoader()
+        // fontLoader.load('./fonts/ZJYHX_Regular.json', function (font) {
+        fontLoader.load("./fonts/SYXZDCS_Regular1.json", function (font) {
+
+          textMtl = new THREE.MeshBasicMaterial({ color: 0x0059b3 });
+
+          for (let index = 0; index < modes.length; index++) {
+            let textGeo = new TextGeometry(modes[index].text, {
+                font: font,
+                size: 10, // ui: size
+                height: 2, // ui: height
+                curveSegments: 12, // ui: curveSegments
+                // bevelEnabled: false,  // ui: bevelEnabled
+                bevelThickness: 1, // ui: bevelThickness
+                bevelSize: 3, // ui: bevelSize
+                bevelSegments: 8, // ui: bevelSegments
+            });
+            modes[index].textMesh = new THREE.Mesh(textGeo, textMtl);
+            modes[index].textMesh.position.set(120, 60, 160);
+            modes[index].textMesh.lookAt(-1, -1, -1);
+            const layer = ( index % modes.length );
+            scene.add(modes[index].textMesh);
+            modes[index].textMesh.layers.set( layer+1 );
+            camera.layers.disable(layer+1);
+        }
+        camera.layers.enable(1);
+        //   textGeo
+        });
+      }
+      function createAfterImage() {
+        renderPass = new RenderPass(scene, camera);
+        unrealBloomPass = new UnrealBloomPass(
+          new THREE.Vector2(window.innerWidth, window.innerHeight),
+          0,
+          4,
+          0
+        );
+        // bloomStrength: 0.016,
+        // 	bloomThreshold: 1.74,
+        // 	bloomRadius: 0.2,
+        unrealBloomPass.threshold = params.bloomThreshold;
+        unrealBloomPass.strength = params.bloomStrength;
+        unrealBloomPass.radius = params.bloomRadius;
+        // const afterImagePass = new AfterimagePass()
+        finalComposer = new EffectComposer(renderer);
+        finalComposer.addPass(renderPass);
+        finalComposer.addPass(unrealBloomPass);
+        adaptToneMappingPass = new AdaptiveToneMappingPass(true, 256);
+        adaptToneMappingPass.needsSwap = true;
+        finalComposer.addPass(adaptToneMappingPass);
+        // const bloomPass = new UnrealBloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 1.5, 0.4, 0.85 );
+        // const gui = new GUI();
+      }
+
+      function initLoadManager() {
+        const loadingElem = document.querySelector("#loading");
+        const progressBarElem = loadingElem.querySelector(".progressbar");
+        const loadManager = new THREE.LoadingManager();
+        loadManager.onLoad = () => {
+          loadingElem.classList.add("fade-animation");
+          setTimeout(() => {
+            loadingElem.style.display = "none";
+          }, 600);
+          // finish done:
+        };
+
+        loadManager.onProgress = (
+          urlOfLastItemLoaded,
+          itemsLoaded,
+          itemsTotal
+        ) => {
+          const progress = itemsLoaded / itemsTotal;
+          progressBarElem.style.transform = `scaleX(${progress})`;
+        };
+
+        return loadManager;
+      }
+
+      function centerObjToSource(obj) {
+        const box3 = new THREE.Box3().setFromObject(obj);
+        const boxSize = box3.getSize(new THREE.Vector3()).length();
+        const boxCenter = box3.getCenter(new THREE.Vector3());
+        obj.position.x -= boxCenter.x;
+        obj.position.y -= boxCenter.y;
+        obj.position.z -= boxCenter.z;
+      }
+ 
+      function initRenderer() {
+        canvas = document.getElementById("c");
+        renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        renderer.setPixelRatio(window.devicePixelRatio)
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        // renderer.toneMappingExposure = 1
+        // renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        // renderer.toneMappingExposure = 0.85;
+        // renderer.physicallyCorrectLights = true
+        // renderer.shadowMap.enabled = true
+        // renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.outputEncoding = THREE.sRGBEncoding;
+        //   renderer.toneMapping = THREE.ACESFilmicToneMapping; // 或者 ReinhardToneMapping
+        //   renderer.toneMapping = THREE.ReinhardToneMapping
+        //   renderer.toneMappingExposure = 1.0;
+        scene = new THREE.Scene();
+
+        camera = new THREE.PerspectiveCamera(
+          45,
+          window.innerWidth / window.innerHeight,
+          0.1,
+          2000
+        );
+        scene.add(camera)
+        camera.layers.enable(10);
+        camera.layers.enable(1);
+        control = new OrbitControls(camera, canvas);
+        initStartControl()
+        // control.target.set(0, camera.position.y - 10, 0)
+        window.addEventListener("resize", function () {
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+
+          renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+      }
+      function initStartControl () {
+        let d = new THREE.Vector3(1, 1, 1);
+        const targetB = new THREE.Vector3(params.x2, params.y2, params.z2);
+        const source = new THREE.Vector3(0, 0, 0);
+        d = d.subVectors(source, targetB);
+        d.normalize();
+        let newTargetPos = d.multiplyScalar(70).clone();
+        let newTarget = d.multiplyScalar(71).clone();
+        params.x1 = newTargetPos.x;
+        params.y1 = newTargetPos.y;
+        params.z1 = newTargetPos.z;
+        camera.position.set(params.x1, params.y1, params.z1);
+        control.target.set(newTarget.x, newTarget.y, newTarget.z);
+        control.update();
+      }
+
+      let lastRenderTime = 0;
+      const targetFPS = 40;
+      const interval = 1000 / targetFPS;
+
+      function antimate(time) {
+        // const t = clock.getElapsedTime()
+        // const delta = t - utime
+        // utime = t
+        // if (animationMixer) {
+        //   animationMixer.update(delta)
+        // }
+        // if (peopleMtl) {
+        //   const t = performance.now() * 0.001
+        //   peopleMtl.uniforms.uTime.value = t
+        // }
+        if (time - lastRenderTime > interval) {
+          render();
+
+          lastRenderTime = time;
+        }
+        // render()
+        requestAnimationFrame(antimate);
+      }
+
+      function render() {
+        TWEEN.update();
+        control.targ;
+        control.update();
+        // renderer.render(scene, camera)
+        finalComposer.render();
+        // requestAnimationFrame(render)
+      }
+
+      function initLight() {
+        // light = new THREE.AmbientLight(0xffffff, 1);
+        // light = new THREE.DirectionalLight(0xffffff, 1);
+        // light.position.set(1, 1, 2);
+        // scene.add(light);
+
+        //   light = new THREE.DirectionalLight(0xffffff, 1)
+        //   light.position.set(-1, -1, -2)
+        //   scene.add(light)
+
+        //   light = new THREE.DirectionalLight(0xffffff, 1)
+        //   light.position.set(-1, 1, -2)
+        //   scene.add(light)
+
+        //   light = new THREE.DirectionalLight(0xffffff, .8)
+        //   light.position.set(0, 1, 0)
+        //   scene.add(light)
+
+        //   light = new THREE.DirectionalLight(0xffff00, .8)
+        //   light.position.set(0, -1, 0)
+        //   scene.add(light)
+      }
+
+      function main() {
+        initRenderer();
+        initLight();
+        coreFun();
+        antimate(0);
+      }
+      main();
+    </script>
+  </body>
+</html>
