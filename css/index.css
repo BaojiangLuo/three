@@ -1,0 +1,75 @@
+
+
+/* loading start */
+#loading {
+  position: fixed;
+  z-index: 999;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  background-color: #000000;
+}
+.fade-animation {
+  animation: fadeAndDisplay .2s ease-out .4s forwards;
+}
+#loading .loading-text {
+  margin: 0;
+  text-align: center;
+  color: #fff;
+  animation: fadeAndShow 1s ease-in-out infinite alternate both;
+}
+#loading .progress {
+  margin: 1.5em;
+  border: 1px solid #448dcf;
+  width: 50vw;
+}
+
+#loading .progressbar {
+  margin: 2px;
+  background-image: linear-gradient(90deg, #3597f1, #72e0d4, #06f6f6);
+  height: 1em;
+  transition: all .3s;
+  transform-origin: top left;
+  transform: scaleX(0);
+}
+@keyframes fadeAndShow{
+  0%{
+    opacity: 0;
+  }
+  100%{
+    opacity: 1;
+  }
+}
+@keyframes fadeAndDisplay{
+  0%{
+    opacity: 1;
+  }
+  100%{
+    opacity: 0;
+  }
+}
+
+/* loading end */
+
+/* normalize start */
+body, h1, h2, h3, h4, h5, h6, hr, p, blockquote, /* structural elements 结构元素 */
+
+dl, dt, dd, ul, ol, li, /* list elements 列表元素 */
+
+pre, /* text formatting elements 文本格式元素 */
+
+fieldset, lengend, button, input, textarea, /* form elements 表单元素 */
+
+th, td { /* table elements 表格元素 */
+
+    margin: 0;
+
+    padding: 0;
+
+}
+/* normalize end */
