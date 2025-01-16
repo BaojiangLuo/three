@@ -108,7 +108,7 @@
         </div>
     </div>
     <div id="loading">
-      <p class="loading-text">loading . . .</p>
+      <p class="loading-text">宇宙构建中耐心等候. . .</p>
       <div class="progress">
         <div class="progressbar"></div>
       </div>
@@ -152,19 +152,19 @@
           textColor: '#0059b3',
           pointColors: ["#0099ff", "#003d99", "#80ccff", "#ffffff"],
           textMesh: null,
-          text: '姓罗的，生日快乐',
+          text: '姓罗的，祝你生日快乐',
         },
         { 
           textColor: '#aa80ff',
           pointColors: ['#aa80ff', '#bb99ff', '#f5ccff', '#ffffff'],
           textMesh: null,
-          text: '祝你美如紫霞'
+          text: '今天，星空只为你闪耀'
         },
         {
           textColor: '#ff80b3',
           pointColors: ['#ff80b3', '#ffe5ff', '#0099ff', '#ffffff'],
           textMesh: null,
-          text: '愿你幸福常乐，生活缤纷'
+          text: '祝你幸运值+100'
         }
       ]
       const params = {
@@ -233,6 +233,7 @@
           const positionArrBufferAttribute =
             root.children[0].children[0].children[0].geometry.attributes
               .position;
+        console.log('positionArrBufferAttribute', positionArrBufferAttribute)
           starCount = positionArrBufferAttribute.count;
           let geometrySphere = new THREE.SphereBufferGeometry(0.1, 24, 24);
           const mtl = new THREE.MeshBasicMaterial({
@@ -314,7 +315,7 @@
       function controlAnimation(isFirst = false) {
         TWEEN.removeAll()
         control.autoRotate = false;
-        let durationTime = isFirst ? 15000 : 4000
+        let durationTime = isFirst ? 10000 : 4000
         new TWEEN.Tween(camera.position)
           .to(
             {
@@ -423,7 +424,7 @@
       function initFont() {
         // const fontLoader = new FontLoader()
         // fontLoader.load('./fonts/ZJYHX_Regular.json', function (font) {
-        fontLoader.load("./fonts/SYXZDCS_Regular1.json", function (font) {
+        fontLoader.load("./fonts/Aa_Regular.json", function (font) {
 
           textMtl = new THREE.MeshBasicMaterial({ color: 0x0059b3 });
 
